@@ -1,0 +1,127 @@
+~ Overview ~
+Automated data analysis and machine learning plays a key part in modern information technology. Machine learning helps
+to discover patterns and find correlations in our data. In this course, we would like to introduce a rule-based approach
+to pattern extraction, namely, association rules. Association rules are often used in market basket analysis to find out
+products that are typically bought together. This can be used to physically re-arrange the products to increase their
+sales or, in the case of online stores, make recommendations. For instance, "bread" and "butter" are often bought
+together with "cheese". How would you discover such associations? What metrics should be used?
+In this project, we will introduce some popular approaches to address this problem.
+
+In Project 2 you will build a system that is capable of finding associations between various features in a dataset.
+The dataset is based on the Star Wars episodes and contains data records with planets and species inhabiting them.
+Then you will apply your system to find some statistically evident associations (namely, implications) between
+characteristics of planets and species inhabiting those planets.
+
+
+
+~ Project 1 Question 1 INFO ~
+The Star Wars dataset consists of two data files each represented in a CSV format:
+
+planets.csv describes features of planets. Each data row represents a distinct planet.
+species.csv gives features of species living on those planets.
+You need to write a function to join read relevant columns from both files and put them together in a single view.
+More specifically, the function should merge contents of the two files into a single datasheet where each line contains
+both features related to species and features related to their home planet.
+
+To get this, you will need to implement a join function that merges lines from two source files based on the identity
+of values in a designated column (field). This field is to be specified separately in each of the two files.
+In our example with species and planets, we want to merge lines by equivalence of values found in the home world column
+of "species.csv" file and the name column of "planets.csv". In such a way, we would join table rows by planet name.
+
+The function should be defined as join(headers1, sheet1, field1, headers2, sheet2, field2), where:
+    - headers1 is a list of column headers from the first data sheet ("species.csv")
+    - sheet1 is the first data sheet contents, which is a list of rows, where each row is a list of column values
+    - field1 is a field name to join in the first datasheet
+    - headers2 is a list of column headers from the second data sheet ("planets.csv")
+    - sheet2is the second data sheet contents, which is a list of rows, where each row is a list of column values
+    - field2 is a field name to join in the second datasheet This function takes line by line from sheet1, then finds a corresponding row in sheet2 driven by an exact match of value in the respective fields (field1, field2). The function should return a tuple (result_header, result_sheet).
+
+The result_header should be list of lists containing a concatenation of headers1 and headers2,
+with the field2 omitted in the latter. result_sheet should represent the joined sheet,
+with a column order in accordance with result_header.
+
+If a species doesn't have a planet or its planet name cannot be found in "planets.csv", simply ignore this line.
+The function implementation should allow using iterators as sheet1 and sheet2.
+It means that only a single “for” iteration OR an explicit conversion to a list is allowed.
+
+
+
+~ Project 1 Question 2 INFO ~
+
+You are to write a function preprocess(sheet, k), where:
+    - sheet is a data sheet. It's a list of data rows. Each data row is a list of values. All values are expected to be strings.
+    - k is the number of quantiles to be created for numbers that are present in a data column.
+
+The return value should be a modified version of sheet. It's acceptable (but not required) to modify elements
+immediately in rows of sheet without making any copy.
+
+The function should do some feature preprocessing as described below and modify data row elements if necessary.
+The purpose of this simplistic processing is to reduce feature value space in order to enable finding more meaningful
+associations between values of different features.
+
+Your function needs to do the following modification of data:
+    - Replace all proper names with their first letters. In our particular context, a proper name is defined as some string which starts with an uppercase letter followed by a lowercase letter.
+    - For all values starting with numbers, remove all characters coming after a number, if any. For example, "12 months" would become "12".
+    - In each column that contains more then k unique numbers, group the numbers into 'k' quantiles so that a column is guaranteed not to contain more than k different numbers. To achieve this, do the following: Let r be a sorted list of all numbers in a column. Split the range of r indexes into k subranges (also called quantiles), then pick a median position in each subrange and use the number found in that position as representative number for a given subrange. Substitute all the numbers by their respective representative numbers of subranges they fall into. While doing that, use round() each time you want to align a calculated fractional position to a discrete position in a number range in order to determine a representatiove number.
+
+Please ensure that all the values in a modified sheet are of string type.
+
+
+
+~ Project 1 Question 3 INFO ~
+
+You are to write a function get_supported_combinations(sheet, min_support) which takes a table-like sheet of
+feature values and returns all combinations of (feature, value) which support is above a given threshold.
+
+The function arguments are:
+sheet is a data sheet. It's a list of data rows. Each data row is a list of values. The value at index i in the latter list represents the value of i_th feature. All values are expected to be strings.
+min_support is minimum acceptable support for a combination to be included into the output list.
+
+Your function should return:
+    - a list of (combination, frequency) tuples, where
+    - combination is a list of (feature, value) tuples, where feature is feature index (its index in a row, starting with 0), and value is respective feature value;
+    - frequency is count of rows that match the combination.
+
+Just to remind, support of a combination is calculated as its frequency in data rows divided by the total data row count.
+
+Feature indexes should have an increasing order within a combination. Thus, a combination [(0,"A"), (1,"B"), (5,"G")] is legal,
+while [(1,"B"), (0,"A"), (5,"G")] isn't acceptable. In the output list, combinations should be sorted lexicographically
+(it's what list.sort() does by default). The first element of the output list should contain an empty combination
+(which stands for no condition, or, in other words, for the truth) and, respectively, the total count of rows in sheet.
+
+Data row elements may contain a special string, "NA", which means "[Data] Not Available".
+Any combination that contains such a value, should be ignored (not included into a returned list).
+
+Please don't try to enumerate all combinations and then filter out ones which don't satisfy a min_support threshold.
+This approach doesn't work in practical cases, because number of possible combination is too high.
+Instead, please note that a combination may satisfy a support threshold only if all subcombinations selected from it
+also satisfy the threshold. Indeed, a subcombination implies a looser condition on a data row than a given combination.
+Therefore, a frequency of the former is (unstrictly) greater than frequency of the latter.
+This fact enables a code deveoper to implement a hierarchical procedure where more complex combinations are built
+on top of less complex ones which compliance to the support threshold has already been confirmed.
+
+
+
+~ Project 1 Question 4 INFO ~
+
+You are to write the function find_implications(combination_frequencies, max_out_len), which returns all possible implications for a given list of "feature = value" combinations, with their lift metrics.
+
+The function arguments are:
+    - combination_frequencies is a list of (combination, frequency) tuples, where combination is a list of (feature, value) tuples.
+    feature here is an integer identifier (or index), while value is a string. combination may be an empty list, in which case it stands for anything which is True regardless any feature value (in other words, for the truth).
+    - max_out_len is maximum output list length.
+
+Your function should return:
+    - a list of all possible implications, each one of them being a tuple (lift, antecedent, subsequent), where:
+    - lift is the lift metric of the "antecedent => subsequent" implication with smoothing (see details below), rounded to two digits after a decimal point.
+    - antecedent is a list of (feature,value) tuples;
+    - subsequent is a single (feature, value) tuple. The returned list should be sorted by lift (in decreasing order). In the case of lift tie follow the order of combination found in the combination_frequencies list.
+    The length of the output list should be limited by max_out_len records with the highest lift values.
+
+It may be assumed that combination_frequencies is a list that might be produced by a function get_supported_combinations
+you've implemented in the Question 3 problem. Particularly, it means that you may rely on the following:
+
+Any subcombination of a combination found in the input combination_frequencies list, can also be found in the list. (Think why!)
+.. And this is also true for an empty combination (which stands together with a total count of data records).
+Within a combination, features are sorted by their index increase.
+Your function will need to look up combinations in the input list. Please use an efficient solution for that.
